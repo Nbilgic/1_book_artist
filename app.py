@@ -364,7 +364,7 @@ def edit_artist_submission(artist_id):
         artist.phone = request.form['phone']
         artist.image_link = request.form['image_link']
         artist.facebook_link = request.form['facebook_link']
-        artist.website = request.form.get('website', '')  # or website_link if your column is named so
+        artist.website = request.form.get('website_link', '')
         artist.genres = genres_value
         artist.seeking_venue = 'seeking_venue' in request.form
         artist.seeking_description = request.form.get('seeking_description', '')
@@ -395,9 +395,10 @@ def edit_venue(venue_id):
     form.state.data = venue.state
     form.address.data = venue.address
     form.phone.data = venue.phone
+    form.genres.data = venue.genres.split(',') if venue.genres else []
     form.image_link.data = venue.image_link
     form.facebook_link.data = venue.facebook_link
-    form.website_link.data = venue.website_link if hasattr(venue, 'website_link') else ''
+    form.website_link.data = venue.website if hasattr(venue, 'website') else ''
     form.seeking_talent.data = venue.seeking_talent if hasattr(venue, 'seeking_talent') else False
     form.seeking_description.data = venue.seeking_description if hasattr(venue, 'seeking_description') else ''
 
