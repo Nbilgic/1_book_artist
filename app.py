@@ -11,6 +11,9 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
+
+from sqlalchemy.dialects.postgresql import ARRAY
+
 from forms import *
 from flask_migrate import Migrate
 
@@ -38,7 +41,7 @@ class Venue(db.Model):
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(ARRAY(db.String))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(500))
@@ -56,7 +59,7 @@ class Artist(db.Model):
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(ARRAY(db.String))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(500))
@@ -185,7 +188,7 @@ def show_venue(venue_id):
     data = {
         "id": venue.id,
         "name": venue.name,
-        "genres": getattr(venue, 'genres', '').split(',') if getattr(venue, 'genres', '') else [],
+        "genres": getattr(venue, 'genres', []),
         "address": venue.address,
         "city": venue.city,
         "state": venue.state,
@@ -223,7 +226,7 @@ def create_venue_submission():
             state=form.state.data,
             address=form.address.data,
             phone=form.phone.data,
-            genres=','.join(form.genres.data),
+            genres=form.genres.data,
             image_link=form.image_link.data,
             facebook_link=form.facebook_link.data,
             website=form.website_link.data,
@@ -323,13 +326,10 @@ def edit_artist(artist_id):
     # Prepopulate the form with existing artist data
     form = ArtistForm(obj=artist)
 
-    # Handle genres whether it's stored as ARRAY or comma-separated string
-    genres = artist.genres if isinstance(artist.genres, list) else artist.genres.split(',') if artist.genres else []
-
     artist = {
         "id": artist.id,
         "name": artist.name,
-        "genres": genres,
+        "genres": artist.genres,
         "city": artist.city,
         "state": artist.state,
         "phone": artist.phone,
@@ -351,12 +351,6 @@ def edit_artist_submission(artist_id):
 
 
     try:
-        # Handle genres safely whether stored as ARRAY or String
-        genres_value = request.form.getlist('genres')
-        if not isinstance(artist.genres, list):
-            # For string storage
-            genres_value = ','.join(genres_value)
-
         # Update artist attributes from form data
         artist.name = request.form['name']
         artist.city = request.form['city']
@@ -365,7 +359,7 @@ def edit_artist_submission(artist_id):
         artist.image_link = request.form['image_link']
         artist.facebook_link = request.form['facebook_link']
         artist.website = request.form.get('website_link', '')
-        artist.genres = genres_value
+        artist.genres = request.form.getlist('genres')
         artist.seeking_venue = 'seeking_venue' in request.form
         artist.seeking_description = request.form.get('seeking_description', '')
 
@@ -395,7 +389,7 @@ def edit_venue(venue_id):
     form.state.data = venue.state
     form.address.data = venue.address
     form.phone.data = venue.phone
-    form.genres.data = venue.genres.split(',') if venue.genres else []
+    form.genres.data = venue.genres
     form.image_link.data = venue.image_link
     form.facebook_link.data = venue.facebook_link
     form.website_link.data = venue.website if hasattr(venue, 'website') else ''
@@ -461,7 +455,7 @@ def create_artist_submission():
             city=request.form['city'],
             state=request.form['state'],
             phone=request.form['phone'],
-            genres=','.join(request.form.getlist('genres')),
+            genres=request.form.getlist('genres'),
             image_link=request.form['image_link'],
             facebook_link=request.form['facebook_link'],
         )

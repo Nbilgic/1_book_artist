@@ -143,5 +143,3 @@ with app.app_context():
 
 **Verify on the Browser**<br>
 Navigate to project homepage [http://127.0.0.1:5000/](http://127.0.0.1:5000/) or [http://localhost:5000](http://localhost:5000) 
-#   1 _ b o o k _ a r t i s t  
- 
